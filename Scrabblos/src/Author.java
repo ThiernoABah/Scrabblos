@@ -2,6 +2,9 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Random;
 
+import org.bouncycastle.jcajce.provider.digest.SHA3;
+import org.bouncycastle.util.encoders.Hex;
+
 public class Author implements Runnable {
 
 	private int privateKey;
@@ -51,6 +54,12 @@ public class Author implements Runnable {
 	
 	public void sendLetter(Character c) {
 		// ici le client envoie une lettre de son sac au serveur
+		/*** exemple hash SHA3-512 ***/
+		byte[] hash = { 0, 1, 0, 0, 1};
+		SHA3.DigestSHA3 digestSHA3 = new SHA3.Digest512();
+		byte[] digest = digestSHA3.digest(hash);
+	    System.out.println("SHA3-512 = " + Hex.toHexString(digest));
+	    /***/
 	}
 	
 	public void askLetters() {
