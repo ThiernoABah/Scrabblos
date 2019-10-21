@@ -1,3 +1,4 @@
+package fr.scrabblos;
 
 public class Lettre {
 	

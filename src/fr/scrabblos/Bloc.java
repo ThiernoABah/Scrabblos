@@ -1,3 +1,4 @@
+package fr.scrabblos;
 import java.util.ArrayList;
 
 public class Bloc {
