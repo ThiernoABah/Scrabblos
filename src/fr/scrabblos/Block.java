@@ -44,6 +44,19 @@ public class Block implements Serializable {
 		return ""+result;
 	}
 	
+	public boolean isValid(int difficulté) {
+		if(mot.size()<difficulté) {
+			return false;
+		}
+		ArrayList<Integer> dejaVu = new ArrayList<>(mot.size());
+		for(Lettre l : mot) {
+			if(dejaVu.contains(l.publicKey)) {
+				return false;
+			}
+			dejaVu.add(l.publicKey);
+		}
+		return true;
+	}
 	
 
 	@Override
