@@ -6,7 +6,7 @@ public class Politicien implements Runnable{
 	private int privateKey;
 	private int publicKey;
 	private ArrayList<Character> allLetters=null;
-	private ArrayList<Bloc> currentChain;
+	private ArrayList<Block> currentChain;
 	private Socket socket;
 	@Override
 	public void run() {

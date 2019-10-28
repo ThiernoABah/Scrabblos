@@ -1,7 +1,9 @@
 package fr.scrabblos;
 
-public class Lettre {
-	
+import java.io.Serializable;
+
+public class Lettre implements Serializable{
+	private static final long serialVersionUID = 1L;
 	public char lettre ;
 	public int publicKey;
 	
@@ -9,5 +11,7 @@ public class Lettre {
 		this.lettre = c;
 		this.publicKey = pk;
 	}
+	
+	
 
 }
