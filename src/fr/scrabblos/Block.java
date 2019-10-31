@@ -24,8 +24,13 @@ public class Block implements Serializable {
 		this.previousHash = preHash;
 		this.creator = creator;
 		this.mot = mot;
+		
 		timestamp = System.currentTimeMillis();
 		hash = calculateHash(String.valueOf(index) + previousHash + String.valueOf(timestamp));
+
+		for(Lettre l : this.mot){
+			l.blockHash = this.hash;
+		}
 
 	}
 	private String calculateHash(String text) {
@@ -54,6 +59,9 @@ public class Block implements Serializable {
 				return false;
 			}
 			dejaVu.add(l.publicKey);
+			if(l.blockHash != this.hash){
+				return false;
+			}
 		}
 		return true;
 	}
@@ -81,6 +89,10 @@ public class Block implements Serializable {
 			for (int i = 0; i < block.mot.size(); i++) {
 				{
 					if (mot.get(i) != block.mot.get(i)) {
+						sameWord = false;
+						break;
+					}
+					if (mot.get(i).blockHash != block.mot.get(i).blockHash) {
 						sameWord = false;
 						break;
 					}
