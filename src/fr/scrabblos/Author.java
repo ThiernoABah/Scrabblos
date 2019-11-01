@@ -1,20 +1,24 @@
 package fr.scrabblos;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.List;
 
 import org.bouncycastle.jcajce.provider.digest.SHA3;
 import org.bouncycastle.util.encoders.Hex;
+import org.json.*;
 
 public class Author implements Runnable {
 
 	private KeyPair pair;
-	private ArrayList<Character> bag=null;
+	private ArrayList<Character> bag=new ArrayList<Character>();
 	private Socket socket;
 	private PrintWriter writer;
 	private BufferedReader reader;
@@ -34,22 +38,7 @@ public class Author implements Runnable {
 	public void run() {
 		connect();
 		getBag();
-		
-		/*
-		boolean fin = false;
-		while(!fin) {
-			Random r = new Random();
-			int rand = r.nextInt(bag.size());
-			sendLetter(bag.get(rand));
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		*/
-		
+			
 		try {
 			socket.close();
 		} catch (IOException e) {
@@ -58,17 +47,19 @@ public class Author implements Runnable {
 	}
 	
 	private void getBag() {
-		try {
-			String line = reader.readLine();
-			System.out.println("msg from serv : "+line);
-		} catch (IOException e) {
-			e.printStackTrace();
+		JSONObject msg = readMessage();
+		JSONArray array = msg.getJSONArray("letters_bag");
+		List<Object> list = array.toList();
+		for(Object o : list) {
+			String c = (String) o;
+			Character cc = c.charAt(0);
+			bag.add(cc);
 		}
 	}
 
 	/* ici le client envoi sa clé public au serveur */
 	public void connect() {
-		sendMessage("{ \"register\" : "+Hex.toHexString(pair.getPublic().getFormat().getBytes())+" }");
+		sendMessage("{ \"register\" : "+"\"b7b597e0d64accdb6d8271328c75ad301c29829619f4865d31cc0c550046a08f\""+" }");
 	} 
 	
 	public void receiveLetter(ArrayList<Character> sac) {
@@ -91,15 +82,42 @@ public class Author implements Runnable {
 	
 	public void sendMessage(String msgJson) {
 		long length = msgJson.length();
-		String msgToSend = Long.toBinaryString(length) + msgJson;
-		// send to serv
-		writer.println(msgToSend);
+		ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+		buffer.putLong(length);
+		byte[] array  = buffer.array();
+		try {
+			DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
+			dOut.write(array);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		writer.println(msgJson);
+		System.out.println(msgJson);
 	}
 	
-	
+	public JSONObject readMessage() {
+		JSONObject msg=null;
+		try {
+			byte[] length = new byte[8];
+			DataInputStream dIn = new DataInputStream(socket.getInputStream());
+			dIn.read(length);
+			ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+		    buffer.put(length);
+		    buffer.flip();//need flip 
+		    long lgth = buffer.getLong();
+		    	int lgt = (int) lgth; // bof
+			char[] buff = new char[lgt];
+			reader.read(buff);
+			String msgJson = new String(buff);
+			msg = new JSONObject(msgJson);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return msg;
+	}
 	
 	public static void main(String[] args) {
-		Author a = new Author("127.0.0.1", 12346);
+		Author a = new Author("127.0.0.1", 12345);
 		new Thread(a).start();
 	}
 }
