@@ -49,8 +49,8 @@ public class Block implements Serializable {
 		return ""+result;
 	}
 	
-	public boolean isValid(int difficulté) {
-		if(mot.size()<difficulté) {
+	public boolean isValid(int difficulte) {
+		if(mot.size()<difficulte) {
 			return false;
 		}
 		ArrayList<Integer> dejaVu = new ArrayList<>(mot.size());
@@ -59,7 +59,7 @@ public class Block implements Serializable {
 				return false;
 			}
 			dejaVu.add(l.publicKey);
-			if(l.blockHash != this.hash){
+			if(!l.blockHash.equals(this.hash)){
 				return false;
 			}
 		}
@@ -92,7 +92,7 @@ public class Block implements Serializable {
 						sameWord = false;
 						break;
 					}
-					if (mot.get(i).blockHash != block.mot.get(i).blockHash) {
+					if (!mot.get(i).blockHash.equals(block.mot.get(i).blockHash)) {
 						sameWord = false;
 						break;
 					}

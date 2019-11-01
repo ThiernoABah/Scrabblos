@@ -5,7 +5,8 @@ import java.util.ArrayList;
 public class Politicien implements Runnable{
 	private int privateKey;
 	private int publicKey;
-	private ArrayList<Character> allLetters=null;
+	
+	private ArrayList<Lettre> allLetters=null;
 	private ArrayList<Block> currentChain;
 	private Socket socket;
 	@Override
@@ -19,6 +20,7 @@ public class Politicien implements Runnable{
 	}
 	
 	private ArrayList<Lettre> createWord(ArrayList<Character> allLettre) {
+		
 		return null;
 		
 	}
