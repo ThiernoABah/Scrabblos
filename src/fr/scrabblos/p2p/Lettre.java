@@ -15,7 +15,7 @@ public class Lettre {
 	}
 	
 	public String toString() {
-		return String.valueOf(this.lettre+":"+String.valueOf(publicKey));
+		return String.valueOf(this.lettre+":"+id+":"+publicKey+":"+blockHash);
 	}
 
 }

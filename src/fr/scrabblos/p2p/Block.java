@@ -22,10 +22,8 @@ public class Block  {
 		this.previousHash = preHash;
 		this.creator = creator;
 		this.mot = mot;
-		
 		timestamp = System.currentTimeMillis();
-		hash = calculateHash(String.valueOf(index) + previousHash + String.valueOf(timestamp));
-
+		this.hash = calculateHash(previousHash);
 		for(Lettre l : this.mot.mot){
 			l.blockHash = this.hash;
 		}
@@ -33,7 +31,7 @@ public class Block  {
 
 	}
 	private String calculateHash(String text) {
-		byte[] hash = { 0, 1, 0, 0, 1 }; // ?
+		byte[] hash = new byte[256];
 		SHA3.DigestSHA3 digestSHA3 = new SHA3.Digest512();
 		byte[] digest = digestSHA3.digest(hash);
 		return Hex.toHexString(digest);
@@ -70,8 +68,8 @@ public class Block  {
 
 	@Override
 	public String toString() {
-		return "Block{" + "index=" + index + ", timestamp=" + timestamp + ", creator=" + creator + ", mot='"
-				+ mot.toString() + '}';
+		return "Block{" + "index=" + index + ", timestamp=" + timestamp + ", creator=" + creator + ", mot='" 
+				+ mot.toString() + ", hash='"+hash+ '}';
 	}
 
 	@Override
@@ -127,8 +125,5 @@ public class Block  {
 	public String getPreviousHash() {
 		return previousHash;
 	}
-
-	
-
 	
 }

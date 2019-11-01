@@ -54,30 +54,36 @@ public class Politicien implements Runnable{
 	@Override
 	public void run() {
 		try {
-			Thread.sleep(100);
+			Thread.sleep(50);
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}
-		while(true) {
+		
+		while(blockChain.tour < BlockChain.MAX_TOUR) {
 			try {
-				
 				blockChain.injectMot(genMot());
-				Thread.sleep(100);
-				Mots bestMot = consensusMots(blockChain.getMotsCandidat()); // doivent tous elire le meme mots
-				blockChain.ajout.lock();
-				if(!blockChain.newBlock) {
-					blockChain.blockChain.add( new Block(blockChain.tour, blockChain.blockChain.get(blockChain.blockChain.size()-1).getHash(), bestMot.publicKey,bestMot) ); // new block avec le mot élu bestMot
-					blockChain.newBlock = true;
-					for(Lettre l :  blockChain.blockChain.get(blockChain.blockChain.size()-1).mot.mot) {
-						l.blockHash = blockChain.blockChain.get(blockChain.blockChain.size()-1).getHash();
-					}
-				}
-				blockChain.blockChain.get(blockChain.blockChain.size()-1).mot.blockHash = blockChain.blockChain.get(blockChain.blockChain.size()-1).getHash();
-				blockChain.motsCandidat = new Vector<>();
-				blockChain.ajout.unlock();
 				
+				Thread.sleep(200);
+				Mots bestMot = consensusMots(blockChain.getMotsCandidat()); // doivent tous elire le meme mots
+				if(bestMot != null) {
+					blockChain.ajout.lock();
+					if(!blockChain.newBlock) {
+						blockChain.tour ++;
+						Block toAdd = new Block(blockChain.tour, blockChain.blockChain.get(blockChain.blockChain.size()-1).getHash(), bestMot.publicKey,bestMot);
+						blockChain.blockChain.add(toAdd); // new block avec le mot élu bestMot
+						blockChain.newBlock = true;
+						for(Lettre l :  bestMot.mot) {
+							l.blockHash = blockChain.blockChain.get(blockChain.blockChain.size()-1).getHash();
+						}
+						bestMot.blockHash = blockChain.blockChain.get(blockChain.blockChain.size()-1).getHash();
+					}
+					
+					blockChain.motsCandidat = new Vector<>();
+					blockChain.ajout.unlock();
+				}
 				Thread.sleep(1500);
-				System.out.println(blockChain.blockChain.size());
+				
+				System.out.println(blockChain);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -96,6 +102,9 @@ public class Politicien implements Runnable{
 			if(i>blockChain.difficulty) {
 				break;
 			}
+			if(!l.blockHash.equals("")) {
+				continue;
+			}
 			i++;
 			mot.add(l);
 		}
@@ -104,6 +113,9 @@ public class Politicien implements Runnable{
 	}
 	
 	public Mots consensusMots(Vector<Mots> vm) {
+		if(vm.size()==0) {
+			return null;
+		}
 		int max = 0;
 		Mots res = vm.get(0);
 		for(Mots m : vm) {

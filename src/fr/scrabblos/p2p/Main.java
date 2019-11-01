@@ -16,14 +16,13 @@ public class Main {
 		poli.add(test1);
 		Politicien test2 = new Politicien(102,bc, new RadixTree("vvv"));
 		poli.add(test2);
-		
 		test.politiciens = poli;
 		test1.politiciens = poli;
 		test2.politiciens = poli;
 		ExecutorService pool = Executors.newFixedThreadPool(13);
 		Author a = null;
 		for(int i=0;i<10;i++) {
-			 pool.execute(new Author(i,50, bc));
+			 pool.execute(new Author(i,15, bc));
 		}
 		pool.execute(test);
 		pool.execute(test1);

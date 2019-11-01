@@ -19,6 +19,6 @@ public class Mots {
 		for (Lettre l : mot) {
 			res.append(l.lettre);
 		}
-		return res.toString();
+		return res.toString()+":"+publicKey+":"+blockHash;
 	}
 }

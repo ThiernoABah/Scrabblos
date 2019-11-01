@@ -8,6 +8,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class BlockChain {
 	
 	public static BlockChain BLOCKCHAIN = new BlockChain();
+	public static int MAX_TOUR = 15;
 	
 	Vector<Lettre> lettrePool= new Vector<Lettre>();
 	Vector<Mots> motsCandidat= new Vector<Mots>();
@@ -62,6 +63,15 @@ public class BlockChain {
 	}
 	public void injectMot(Mots m) {
 		motsCandidat.add(m);
+	}
+	
+	public String toString() {
+		String res = "#######\n";
+		for(Block b : this.blockChain) {
+			res += b.toString()+"\n";
+		}
+		res += "#######\n";
+		return res;
 	}
 	
 
