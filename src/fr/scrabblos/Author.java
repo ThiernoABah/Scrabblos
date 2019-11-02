@@ -7,13 +7,18 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import org.bouncycastle.jcajce.provider.digest.SHA3;
 import org.bouncycastle.util.encoders.Hex;
-import org.json.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class Author implements Runnable {
 
@@ -22,10 +27,16 @@ public class Author implements Runnable {
 	private Socket socket;
 	private PrintWriter writer;
 	private BufferedReader reader;
+	private boolean isGameRunning = true;
 	private int period = 0;
 	
+	private byte[] publicKey;
+	private byte[] privateKey;
+	
+	private int currentPoint=0;
+	
 	public Author(String host, int port) {
-		pk = Utils.getNewPublicKeyToHexa();
+		pk = getNewPublicKeyToHexa();
 		try {
 			socket = new Socket(host, port);
 			writer = new PrintWriter(socket.getOutputStream(), true);
@@ -40,15 +51,15 @@ public class Author implements Runnable {
 		connect();
 		getBag();
 		getFullLetterPool();
-		listen();
+		//getFullLetterPoolSince(5);
+		//listen();
 		
-		boolean notOver = true;
-		while(notOver) {
+		while(isGameRunning) {
 			injectLetter();
 			waitForNextTurn();
 		}
 		
-		stopListen();
+		//stopListen();
 		try {
 			socket.close();
 		} catch (IOException e) {
@@ -56,16 +67,31 @@ public class Author implements Runnable {
 		}
 	}
 	
-	private void waitForNextTurn() {
-		try {
-			Thread.sleep(100000); // effacer apres implem de la fonction
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	private void getFullLetterPoolSince(int periodSince) {
+		sendMessage("{ \"get_letterpool_since\": "+periodSince+"}");
+		JSONObject response = readMessage();
+		JSONObject full_letterpool = response.getJSONObject("full_letterpool");
+		period = full_letterpool.getInt("current_period");
+		JSONArray array = full_letterpool.getJSONArray("letters");
+		List<Object> list = array.toList();
+		for(Object o : list) {
+			JSONObject obj = (JSONObject) o;
+			Character cc = obj.getString("letter").charAt(0);
+			bag.remove(cc);
 		}
-		//read = next_turn ou fin du jeu;
-		//fin_du_jeu => notOver=false;
 	}
+
+	private void waitForNextTurn() {
+		if(!isGameRunning) return;
+		JSONObject response = readMessage();
+		try {
+			int integer = response.getInt("next_turn");
+			period = integer;
+		}catch(Exception e) { // fin du jeu ou autre message si en mode ecoute
+			isGameRunning=false;
+		}
+	}
+	
 
 	private void getFullLetterPool() {
 		sendMessage("{ \"get_full_letterpool\": null}");
@@ -82,18 +108,62 @@ public class Author implements Runnable {
 	}
 
 	private void injectLetter() {
+		if(bag.size()==0) {
+			isGameRunning = false;
+			return;
+		}
+		// get a letter from bag
 		Random r = new Random();
 		int rand = r.nextInt(bag.size());
 		char letter = bag.get(rand).charValue();
 		bag.remove(rand);
 		
-		sendMessage("{ \"inject_letter\": "
-				+ "{ \"letter\":\""+letter+"\","
-				+ " \"period\":"+period+"," + 
-				"\"head\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"," + 
-				"\"author\":\""+pk+"\"," + 
-				"\"signature\":\"8b6547447108e11c0092c95e460d70f367bc137d5f89c626642e1e5f2ceb6108043d4a080223b467bb810c52b5975960eea96a2203a877f32bbd6c4dac16ec07\"" + 
-				" } }");
+		
+		try {
+			/** binaries **/
+			byte[] letterBinary = (letter+"").getBytes(Charset.forName("UTF-8"));
+			long periods = (long) period;
+			ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+			buffer.putLong(periods);
+			byte[] periodBinary  = buffer.array();
+			
+			// hash du block précedent
+			byte[] prevBlockHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".getBytes(Charset.forName("UTF-8"));
+			
+			byte[] pkBytes = pk.getBytes(Charset.forName("UTF-8"));
+			
+			ByteBuffer bb = ByteBuffer.allocate(letterBinary.length + periodBinary.length + prevBlockHash.length + pkBytes.length);
+			bb.put(letterBinary);
+			bb.put(periodBinary);
+			bb.put(prevBlockHash);
+			bb.put(pkBytes);
+			
+			byte toDigest[] = bb.array();
+			/**/
+			
+			//SHA 256
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			byte[] sha256 = digest.digest(toDigest);
+			
+			// generate signature for injecting
+			byte[] encodedMsg = ed25519.signature(sha256, privateKey, publicKey);
+			StringBuilder sb = new StringBuilder();
+	        for (byte b : encodedMsg) {
+	            sb.append(String.format("%02x", b));
+	        }
+			String signature= sb.toString();
+			
+			// send the msg
+			sendMessage("{ \"inject_letter\": "
+					+ "{ \"letter\":\""+letter+"\", "
+					+ " \"period\":"+period+", " + 
+					"\"head\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\", " + 
+					"\"author\":\""+pk+"\", " + 
+					"\"signature\":\""+signature+"\"" + 
+					" } }");
+		} catch (Exception e ) {
+			e.printStackTrace();
+		}
 	}
 
 	private void stopListen() {
@@ -122,16 +192,6 @@ public class Author implements Runnable {
 	
 	public void receiveLetter(ArrayList<Character> sac) {
 		this.bag = sac;
-	}
-	
-	public void sendLetter(Character c) {
-		// ici le client envoie une lettre de son sac au serveur
-		/*** exemple hash SHA3-512 ***/
-		byte[] hash = { 0, 1, 0, 0, 1};
-		SHA3.DigestSHA3 digestSHA3 = new SHA3.Digest512();
-		byte[] digest = digestSHA3.digest(hash);
-	    System.out.println("SHA3-512 = " + Hex.toHexString(digest));
-	    /***/
 	}
 	
 	public void sendMessage(String msgJson) {
@@ -171,8 +231,39 @@ public class Author implements Runnable {
 		return msg;
 	}
 	
+	public String getNewPublicKeyToHexa() {
+		String hexa ="";
+		try {
+			KeyPairGenerator keyGen;
+			keyGen = KeyPairGenerator.getInstance("RSA");
+			keyGen.initialize(2048);
+			KeyPair pair = keyGen.generateKeyPair();
+			
+			privateKey = pair.getPrivate().getEncoded();
+			publicKey = ed25519.publickey(privateKey);
+			//byte[] encodedMsg = ed25519.signature("".getBytes(Charset.forName("UTF-8")), priv, publ);
+			
+			StringBuilder sb = new StringBuilder();
+	        for (byte b : publicKey) {
+	            sb.append(String.format("%02x", b));
+	        }
+	        hexa = sb.toString();
+	        
+	        //System.out.println("check valid : "+ed25519.checkvalid(encodedMsg, "".getBytes(Charset.forName("UTF-8")), publ));
+	       
+		} catch (Exception e) {
+			e.printStackTrace();
+		} 
+		return hexa;
+	}
+	
 	public static void main(String[] args) {
 		Author a = new Author("127.0.0.1", 12345);
+		Author b = new Author("127.0.0.1", 12345);
+		Author c= new Author("127.0.0.1", 12345);
+		//Politicien p = new Politicien();
 		new Thread(a).start();
+		new Thread(b).start();
+		new Thread(c).start();
 	}
 }
