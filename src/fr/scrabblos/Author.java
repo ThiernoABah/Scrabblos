@@ -7,9 +7,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.bouncycastle.jcajce.provider.digest.SHA3;
 import org.bouncycastle.util.encoders.Hex;
@@ -17,13 +17,15 @@ import org.json.*;
 
 public class Author implements Runnable {
 
-	private KeyPair pair;
+	private String pk;
 	private ArrayList<Character> bag=new ArrayList<Character>();
 	private Socket socket;
 	private PrintWriter writer;
 	private BufferedReader reader;
+	private int period = 0;
 	
 	public Author(String host, int port) {
+		pk = Utils.getNewPublicKeyToHexa();
 		try {
 			socket = new Socket(host, port);
 			writer = new PrintWriter(socket.getOutputStream(), true);
@@ -31,14 +33,22 @@ public class Author implements Runnable {
 		}catch (IOException e) {
 			e.printStackTrace();
 		}
-		pair = Utils.getNewKey("author");
 	}
 
 	@Override
 	public void run() {
 		connect();
 		getBag();
-			
+		getFullLetterPool();
+		listen();
+		
+		boolean notOver = true;
+		while(notOver) {
+			injectLetter();
+			waitForNextTurn();
+		}
+		
+		stopListen();
 		try {
 			socket.close();
 		} catch (IOException e) {
@@ -46,6 +56,54 @@ public class Author implements Runnable {
 		}
 	}
 	
+	private void waitForNextTurn() {
+		try {
+			Thread.sleep(100000); // effacer apres implem de la fonction
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//read = next_turn ou fin du jeu;
+		//fin_du_jeu => notOver=false;
+	}
+
+	private void getFullLetterPool() {
+		sendMessage("{ \"get_full_letterpool\": null}");
+		JSONObject response = readMessage();
+		JSONObject full_letterpool = response.getJSONObject("full_letterpool");
+		period = full_letterpool.getInt("current_period");
+		JSONArray array = full_letterpool.getJSONArray("letters");
+		List<Object> list = array.toList();
+		for(Object o : list) {
+			JSONObject obj = (JSONObject) o;
+			Character cc = obj.getString("letter").charAt(0);
+			bag.remove(cc);
+		}
+	}
+
+	private void injectLetter() {
+		Random r = new Random();
+		int rand = r.nextInt(bag.size());
+		char letter = bag.get(rand).charValue();
+		bag.remove(rand);
+		
+		sendMessage("{ \"inject_letter\": "
+				+ "{ \"letter\":\""+letter+"\","
+				+ " \"period\":"+period+"," + 
+				"\"head\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"," + 
+				"\"author\":\""+pk+"\"," + 
+				"\"signature\":\"8b6547447108e11c0092c95e460d70f367bc137d5f89c626642e1e5f2ceb6108043d4a080223b467bb810c52b5975960eea96a2203a877f32bbd6c4dac16ec07\"" + 
+				" } }");
+	}
+
+	private void stopListen() {
+		sendMessage("{ \"stop_listen\" : null }");
+	}
+
+	private void listen() {
+		sendMessage("{ \"listen\" : null }");
+	}
+
 	private void getBag() {
 		JSONObject msg = readMessage();
 		JSONArray array = msg.getJSONArray("letters_bag");
@@ -59,7 +117,7 @@ public class Author implements Runnable {
 
 	/* ici le client envoi sa clé public au serveur */
 	public void connect() {
-		sendMessage("{ \"register\" : "+"\"b7b597e0d64accdb6d8271328c75ad301c29829619f4865d31cc0c550046a08f\""+" }");
+		sendMessage("{ \"register\" : "+"\""+pk+"\""+" }");
 	} 
 	
 	public void receiveLetter(ArrayList<Character> sac) {
@@ -76,10 +134,6 @@ public class Author implements Runnable {
 	    /***/
 	}
 	
-	public void askLetters() {
-		
-	}
-	
 	public void sendMessage(String msgJson) {
 		long length = msgJson.length();
 		ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
@@ -91,8 +145,8 @@ public class Author implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		writer.println(msgJson);
-		System.out.println(msgJson);
+		writer.printf("%s", msgJson);
+		System.out.println("SEND : "+ msgJson);
 	}
 	
 	public JSONObject readMessage() {
@@ -110,6 +164,7 @@ public class Author implements Runnable {
 			reader.read(buff);
 			String msgJson = new String(buff);
 			msg = new JSONObject(msgJson);
+			System.out.println("RECEIVE : "+msgJson);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
