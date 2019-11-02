@@ -10,11 +10,11 @@ public class Main {
 		BlockChain bc = new BlockChain();
 		
 		Vector<Politicien> poli = new Vector<>();
-		Politicien test = new Politicien(100,bc, new RadixTree("vvv"));
+		Politicien test = new Politicien(100,bc, new Trie());
 		poli.add(test);
-		Politicien test1 = new Politicien(101,bc, new RadixTree("vvv"));
+		Politicien test1 = new Politicien(101,bc, new Trie());
 		poli.add(test1);
-		Politicien test2 = new Politicien(102,bc, new RadixTree("vvv"));
+		Politicien test2 = new Politicien(102,bc, new Trie());
 		poli.add(test2);
 		test.politiciens = poli;
 		test1.politiciens = poli;

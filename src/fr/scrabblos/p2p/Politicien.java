@@ -12,12 +12,12 @@ public class Politicien implements Runnable{
 	public Vector<Lettre> letterPool;
 	public Mots motCandidat;
 	public Vector<Mots> motsCandidat;
-	public RadixTree radix;
+	public Trie trie;
 	private BlockChain blockChain;
 	
 	public Vector<Politicien> politiciens = new Vector<>();
 	
-	public Politicien(int publicKey, BlockChain b,RadixTree rt) {
+	public Politicien(int publicKey, BlockChain b,Trie rt) {
 		tableauScore.put("a", 1);
 		tableauScore.put("b", 3);
 		tableauScore.put("c", 3);
@@ -46,7 +46,7 @@ public class Politicien implements Runnable{
 		tableauScore.put("z", 10);
 		
 		this.letterPool = new Vector<>();
-		this.radix = rt;
+		this.trie = rt;
 		this.blockChain = b;
 		this.publicKey = publicKey;
 	}
