@@ -1,5 +1,6 @@
 package fr.scrabblos.p2p;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import org.bouncycastle.jcajce.provider.digest.SHA3;
@@ -31,9 +32,8 @@ public class Block  {
 
 	}
 	private String calculateHash(String text) {
-		byte[] hash = new byte[256];
 		SHA3.DigestSHA3 digestSHA3 = new SHA3.Digest512();
-		byte[] digest = digestSHA3.digest(hash);
+		byte[] digest = digestSHA3.digest(text.getBytes(StandardCharsets.UTF_8));
 		return Hex.toHexString(digest);
 	}
 	public String hashSeed() {
@@ -68,8 +68,8 @@ public class Block  {
 
 	@Override
 	public String toString() {
-		return "Block{" + "index=" + index + ", timestamp=" + timestamp + ", creator=" + creator + ", mot='" 
-				+ mot.toString() + ", hash='"+hash+ '}';
+		return "Block{" + "index=" + index + ", timestamp=" + timestamp + ", creator=" + creator + ", hash='"+hash+ ", previousHash='"+previousHash+ ", mot='" 
+				+ mot.toString() + '}';
 	}
 
 	@Override

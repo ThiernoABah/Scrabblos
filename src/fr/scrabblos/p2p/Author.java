@@ -31,8 +31,11 @@ public class Author implements Runnable {
 
 			try {
 				Thread.sleep(1500);
-				blockChain.newBlock = false;
-
+				if(blockChain.newBlock) {
+					blockChain.lock.lock();
+					blockChain.newBlock = false;
+					blockChain.lock.unlock();
+				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
