@@ -5,12 +5,36 @@ import java.io.Serializable;
 public class Lettre implements Serializable{
 	private static final long serialVersionUID = 1L;
 	public char lettre ;
-	public int publicKey;
-	public String blockHash = ""; // le hash du block sur lequel cette lettre est (par defaut chaine vide, la lettre n'est sur aucune lettre)
-
-	public Lettre(char c, int pk) {
+	public int period ;
+	public String head;
+	public int author;
+	public String signature;
+	
+	
+	public Lettre(char c, int pk,int period, String head, String signature ) {
 		this.lettre = c;
-		this.publicKey = pk;
+		this.author = pk;
+		this.period = period;
+		this.head = head;
+		this.signature = signature;
+	}
+	
+	public String toString() {
+		return "lettre : "+lettre+" period : "+period+" author : "+author+" head : " + head+" signature : "+signature;
+	}
+	
+	@Override
+	public boolean equals(final Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		final Lettre l = (Lettre) o;
+		
+		return lettre == l.lettre && head.equals(l.head) && author==l.author
+				&& period == l.period && signature.equals(l.signature);
 	}
 
 }

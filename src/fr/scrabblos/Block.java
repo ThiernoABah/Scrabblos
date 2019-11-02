@@ -14,54 +14,40 @@ public class Block implements Serializable {
 	private String hash;
 	private String previousHash;
 	private String creator;
-	private ArrayList<Lettre> mot;
+	private Mot mot;
 
 	public Block() {
 	}
 	
-	public Block(int index, String preHash, String creator, ArrayList<Lettre> mot) {
+	public Block(int index, String preHash, String creator, Mot mot) {
 		this.index = index;
 		this.previousHash = preHash;
 		this.creator = creator;
 		this.mot = mot;
 		
 		timestamp = System.currentTimeMillis();
-		hash = calculateHash(String.valueOf(index) + previousHash + String.valueOf(timestamp));
-
-		for(Lettre l : this.mot){
-			l.blockHash = this.hash;
-		}
-
+		hash = calculateHash( previousHash);
 	}
 	private String calculateHash(String text) {
-		byte[] hash = { 0, 1, 0, 0, 1 }; // ?
+		byte[] hash = { 0, 1, 0, 0, 1 }; 
 		SHA3.DigestSHA3 digestSHA3 = new SHA3.Digest512();
 		byte[] digest = digestSHA3.digest(hash);
 		return Hex.toHexString(digest);
 	}
-	public String hashSeed() {
-		int result = index;
-		result = 31 * result + timestamp.hashCode();
-		result = 31 * result + hash.hashCode();
-		result = 31 * result + previousHash.hashCode();
-		result = 31 * result + creator.hashCode();
-		result = 31 * result + mot.hashCode();
-		return ""+result;
-	}
 	
-	public boolean isValid(int difficulte) {
-		if(mot.size()<difficulte) {
-			return false;
+	public boolean isValid() {
+		ArrayList<Integer> dejaVu = new ArrayList<>();
+		for(Lettre l : mot.mot) {
+			if(dejaVu.contains(l.author)) {
+				return false;
+			}
+			dejaVu.add(l.author);
+			if(!l.head.equals(this.hash)){
+				return false;
+			}
 		}
-		ArrayList<Integer> dejaVu = new ArrayList<>(mot.size());
-		for(Lettre l : mot) {
-			if(dejaVu.contains(l.publicKey)) {
-				return false;
-			}
-			dejaVu.add(l.publicKey);
-			if(!l.blockHash.equals(this.hash)){
-				return false;
-			}
+		if(!mot.head.equals(this.hash)) {
+			return false;
 		}
 		return true;
 	}
@@ -70,7 +56,7 @@ public class Block implements Serializable {
 	@Override
 	public String toString() {
 		return "Block{" + "index=" + index + ", timestamp=" + timestamp + ", creator=" + creator + ", mot='"
-				+ motToString() + '}';
+				+ mot.toString() + '}';
 	}
 
 	@Override
@@ -82,25 +68,19 @@ public class Block implements Serializable {
 			return false;
 		}
 		final Block block = (Block) o;
-		boolean sameWord = true;
-		if (block.mot.size() != mot.size()) {
-			sameWord = false;
-		} else {
-			for (int i = 0; i < block.mot.size(); i++) {
-				{
-					if (mot.get(i) != block.mot.get(i)) {
-						sameWord = false;
-						break;
-					}
-					if (!mot.get(i).blockHash.equals(block.mot.get(i).blockHash)) {
-						sameWord = false;
-						break;
-					}
-				}
-			}
-
+		if(block.mot.mot.size()!=this.mot.mot.size()) {
+			return false;
 		}
-		return sameWord && index == block.index && timestamp.equals(block.timestamp) && hash.equals(block.hash)
+		if(!mot.head.equals(block.mot.head)) {
+			return false;
+		}
+		for(int i = 0;i<this.mot.mot.size();i++) {
+			if(!mot.mot.get(i).equals(block.mot.mot)) {
+				return false;
+			}
+		}
+		
+		return index == block.index && timestamp.equals(block.timestamp) && hash.equals(block.hash)
 				&& previousHash.equals(block.previousHash) && creator.equals(block.creator);
 	}
 
@@ -122,14 +102,6 @@ public class Block implements Serializable {
 
 	public String getPreviousHash() {
 		return previousHash;
-	}
-
-	public String motToString() {
-		StringBuilder res = new StringBuilder();
-		for (Lettre l : mot) {
-			res.append(l.lettre);
-		}
-		return res.toString();
 	}
 
 	
