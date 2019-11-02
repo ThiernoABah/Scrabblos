@@ -3,6 +3,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Vector;
 
+import fr.scrabblos.p2p.Trie;
+
 public class Politicien implements Runnable{
 	private int privateKey;
 	private int publicKey;
@@ -70,7 +72,7 @@ public class Politicien implements Runnable{
 					if(!blockChain.newBlock) {
 						blockChain.tour ++;
 						Block toAdd = new Block(blockChain.tour, blockChain.blockChain.get(blockChain.blockChain.size()-1).getHash(), bestMot.publicKey,bestMot);
-						blockChain.blockChain.add(toAdd); // new block avec le mot élu bestMot
+						blockChain.blockChain.add(toAdd); // new block avec le mot ï¿½lu bestMot
 						blockChain.newBlock = true;
 						for(Lettre l :  bestMot.mot) {
 							l.blockHash = blockChain.blockChain.get(blockChain.blockChain.size()-1).getHash();

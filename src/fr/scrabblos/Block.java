@@ -41,7 +41,7 @@ public class Block implements Serializable {
 			if(dejaVu.contains(l.author)) {
 				return false;
 			}
-			dejaVu.add(l.author);
+			//dejaVu.add(l.author);
 			if(!l.head.equals(this.hash)){
 				return false;
 			}

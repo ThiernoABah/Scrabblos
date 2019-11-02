@@ -7,11 +7,11 @@ public class Lettre implements Serializable{
 	public char lettre ;
 	public int period ;
 	public String head;
-	public int author;
+	public String author;
 	public String signature;
 	
 	
-	public Lettre(char c, int pk,int period, String head, String signature ) {
+	public Lettre(char c, String pk,int period, String head, String signature ) {
 		this.lettre = c;
 		this.author = pk;
 		this.period = period;
