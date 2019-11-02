@@ -103,10 +103,11 @@ public class Trie implements Serializable{
         trie.insert("life");
         
         System.out.println(trie.containsNode("Programming"));
-        System.out.println(trie.containsNode("P"));
-        System.out.println(trie.containsNode("wa"));
+        System.out.println(trie.containsNode("Pro"));
         System.out.println(trie.containsNode("is"));
-        System.out.println(trie.getWordsSizeI(trie.root, 2));
+        
+        String[] ha = trie.getWordsSizeI(trie.root, 2).split(";");
+        System.out.println(ha.length);
         
     }
 }
