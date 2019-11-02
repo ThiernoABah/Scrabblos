@@ -26,7 +26,7 @@ public class Block implements Serializable {
 		this.mot = mot;
 		
 		timestamp = System.currentTimeMillis();
-		hash = calculateHash( previousHash);
+		hash = calculateHash(previousHash);
 	}
 	private String calculateHash(String text) {
 		byte[] hash = { 0, 1, 0, 0, 1 }; 
@@ -103,6 +103,19 @@ public class Block implements Serializable {
 	public String getPreviousHash() {
 		return previousHash;
 	}
+	
+	public int getScore() {
+		Score s = new Score();
+		
+		int res = 0;
+		
+		for(Lettre l : mot.mot) {
+			res += s.tableauScore.get(String.valueOf(l.lettre));
+		}
+		
+		return res;
+	}
 
+	
 	
 }
