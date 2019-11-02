@@ -2,6 +2,9 @@ package fr.scrabblos;
 
 
 import java.io.Serializable;
+import java.util.ArrayList;
+
+import com.sun.corba.se.impl.encoding.OSFCodeSetRegistry.Entry;
 
 public class Trie implements Serializable{
     private TrieNode root;
@@ -63,6 +66,32 @@ public class Trie implements Serializable{
         return false;
     }
     
+    private String getWordsSizeI(TrieNode t, int i){
+    	String res = "";
+    	if(i == 1) {
+    		for(java.util.Map.Entry<Character, TrieNode> entry : t.getChildren().entrySet()) {
+    			Character cle = entry.getKey();
+    			TrieNode valeur = entry.getValue();
+    		    if(valeur.isEndOfWord()) {
+    		    	return cle.toString()+";";
+    		    }
+    		}
+    	}
+    	i--;
+    	for(java.util.Map.Entry<Character, TrieNode> entry : t.getChildren().entrySet()) {
+			Character cle = entry.getKey();
+			TrieNode valeur = entry.getValue();
+			if(valeur.isEndOfWord()) {
+				continue;
+			}
+			String tmp = getWordsSizeI(valeur,i);
+			if(!tmp.equals("")) {
+				res+=cle.toString()+tmp;
+			}
+		}
+    	return res;
+    }
+    
     public static void main(String[] args) {
     	Trie trie = new Trie();
 
@@ -77,6 +106,7 @@ public class Trie implements Serializable{
         System.out.println(trie.containsNode("P"));
         System.out.println(trie.containsNode("wa"));
         System.out.println(trie.containsNode("is"));
+        System.out.println(trie.getWordsSizeI(trie.root, 2));
         
     }
 }
