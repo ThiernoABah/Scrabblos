@@ -9,6 +9,9 @@ public class Printeur extends TimerTask {
 		this.bc = b;
 	}
     public void run() {
+    	if(bc.lettrePool.size() <= bc.difficulty) {
+    		return;
+    	}
        System.out.println(bc); 
     }
 }

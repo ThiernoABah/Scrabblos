@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import org.bouncycastle.jcajce.provider.digest.SHA3;
 import org.bouncycastle.util.encoders.Hex;
 
+
+
 public class Block  {
 
 	private int index;
@@ -116,6 +118,17 @@ public class Block  {
 
 	public String getPreviousHash() {
 		return previousHash;
+	}
+	public int getScore() {
+		Score s = new Score();
+		
+		int res = 0;
+		
+		for(Lettre l : mot.mot) {
+			res += s.tableauScore.get(String.valueOf(l.lettre));
+		}
+		
+		return res;
 	}
 	
 }

@@ -61,7 +61,15 @@ public class Politicien implements Runnable{
 				e.printStackTrace();
 			}
 		}
-		
+		int score = 0;
+		int nbB = 0;
+		for(Block b : blockChain.blockChain) {
+			if(b.getCreator() == publicKey) {
+				score += b.getScore();
+				nbB++;
+			}
+		}
+		System.out.println("politicien : "+publicKey+" score : "+score+" nb blocs : "+nbB);
 		
 	}
 	
