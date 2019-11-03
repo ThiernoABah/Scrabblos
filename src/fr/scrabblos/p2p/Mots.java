@@ -5,12 +5,12 @@ import java.util.Vector;
 public class Mots {
 
 	public Vector<Lettre> mot ;
-	public int publicKey;
+	public int politicien;
 	public String blockHash = ""; // le hash du block sur lequel ce mot est (par defaut chaine vide)
 
 	public Mots(Vector<Lettre> m, int pk,String bh) {
 		this.mot = m;
-		this.publicKey = pk;
+		this.politicien = pk;
 		this.blockHash = bh;
 	}
 	
@@ -19,6 +19,6 @@ public class Mots {
 		for (Lettre l : mot) {
 			res.append(l.lettre);
 		}
-		return res.toString()+":"+publicKey+":"+blockHash;
+		return res.toString()+":"+politicien+":"+blockHash;
 	}
 }

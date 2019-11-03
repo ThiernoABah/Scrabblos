@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import org.bouncycastle.jcajce.provider.digest.SHA3;
 import org.bouncycastle.util.encoders.Hex;
 
+import fr.scrabblos.Lettre;
+
 public class Block implements Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -27,6 +29,11 @@ public class Block implements Serializable {
 		
 		timestamp = System.currentTimeMillis();
 		hash = calculateHash(previousHash);
+		
+		for(Lettre a : this.mot.mot){
+			a.head = this.hash;
+		}
+		mot.head = this.hash;
 	}
 	private String calculateHash(String text) {
 		byte[] hash = { 0, 1, 0, 0, 1 }; 

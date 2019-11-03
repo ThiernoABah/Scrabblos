@@ -36,14 +36,6 @@ public class Block  {
 		byte[] digest = digestSHA3.digest(text.getBytes(StandardCharsets.UTF_8));
 		return Hex.toHexString(digest);
 	}
-	public String hashSeed() {
-		int result = index;
-		result = 31 * result + timestamp.hashCode();
-		result = 31 * result + hash.hashCode();
-		result = 31 * result + previousHash.hashCode();
-		result = 31 * result + mot.hashCode();
-		return ""+result;
-	}
 	
 	public boolean isValid(int difficulte) {
 		if(mot.mot.size()<difficulte) {
@@ -51,10 +43,10 @@ public class Block  {
 		}
 		ArrayList<Integer> dejaVu = new ArrayList<>(mot.mot.size());
 		for(Lettre l : mot.mot) {
-			if(dejaVu.contains(l.publicKey)) {
+			if(dejaVu.contains(l.author)) {
 				return false;
 			}
-			dejaVu.add(l.publicKey);
+			dejaVu.add(l.author);
 			if(!l.blockHash.equals(this.hash)){
 				return false;
 			}
@@ -68,8 +60,8 @@ public class Block  {
 
 	@Override
 	public String toString() {
-		return "Block{" + "index=" + index + ", timestamp=" + timestamp + ", creator=" + creator + ", hash='"+hash+ ", previousHash='"+previousHash+ ", mot='" 
-				+ mot.toString() + '}';
+		return "Block{ " + "index = " + index + ", timestamp = " + timestamp + ", creator = " + creator + ", hash = '"+hash+ ", previousHash = '"+previousHash+ ", mot = '" 
+				+ mot.toString() + " } ";
 	}
 
 	@Override

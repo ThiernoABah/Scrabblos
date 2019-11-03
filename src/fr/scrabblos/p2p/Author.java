@@ -2,13 +2,9 @@ package fr.scrabblos.p2p;
 
 import java.util.Random;
 import java.util.Vector;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class Author implements Runnable {
 
-	private int privateKey;
 	private int publicKey;
 	public Vector<Lettre> letterBag;
 	private BlockChain blockChain;
@@ -25,24 +21,15 @@ public class Author implements Runnable {
 	public void run() {
 		int t = this.letterBag.size();
 		while (t > 0) {
-			blockChain.lock.lock();
 			blockChain.injectLetter(letterBag.remove(0));
-			blockChain.lock.unlock();
-
+			t--;
 			try {
 				Thread.sleep(1500);
-				if(blockChain.newBlock) {
-					blockChain.lock.lock();
-					blockChain.newBlock = false;
-					blockChain.lock.unlock();
-				}
+				
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			t--;
-
 		}
-		System.out.println("out of letter bye");
 
 	}
 

@@ -1,56 +1,27 @@
 package fr.scrabblos.p2p;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Vector;
 
-import fr.scrabblos.p2p.Trie;
-
 public class Politicien implements Runnable{
-	private int privateKey;
-	private int publicKey;
-	
-	private final HashMap<String,Integer> tableauScore = new HashMap<>();
-	
-	public Vector<Lettre> letterPool;
-	public Mots motCandidat;
-	public Vector<Mots> motsCandidat;
-	public Trie trie;
+	private Score tableauScore = new Score();
 	private BlockChain blockChain;
 	
-	public Vector<Politicien> politiciens = new Vector<>();
+	private int publicKey;
+	public Vector<Lettre> letterPool;
+	public Vector<Mots> motsCandidat;
 	
+	public Trie trie;
+	String[] motsPossible;
+		
 	public Politicien(int publicKey, BlockChain b,Trie rt) {
-		tableauScore.put("a", 1);
-		tableauScore.put("b", 3);
-		tableauScore.put("c", 3);
-		tableauScore.put("d", 2);
-		tableauScore.put("e", 1);
-		tableauScore.put("f", 4);
-		tableauScore.put("g", 2);
-		tableauScore.put("h", 4);
-		tableauScore.put("i", 1);
-		tableauScore.put("j", 8);
-		tableauScore.put("k", 10);
-		tableauScore.put("l", 1);
-		tableauScore.put("m", 2);
-		tableauScore.put("n", 1);
-		tableauScore.put("o", 1);
-		tableauScore.put("p", 3);
-		tableauScore.put("q", 8);
-		tableauScore.put("r", 1);
-		tableauScore.put("s", 1);
-		tableauScore.put("t", 1);
-		tableauScore.put("u", 1);
-		tableauScore.put("v", 4);
-		tableauScore.put("w", 10);
-		tableauScore.put("x", 10);
-		tableauScore.put("y", 10);
-		tableauScore.put("z", 10);
 		
 		this.letterPool = new Vector<>();
 		this.trie = rt;
 		this.blockChain = b;
 		this.publicKey = publicKey;
+//		String s = trie.getWordsSizeI(trie.root, 4);
+//		this.motsPossible = s.split(";");
 	}
 	
 	@Override
@@ -61,31 +32,31 @@ public class Politicien implements Runnable{
 			e1.printStackTrace();
 		}
 		
-		while(blockChain.tour < BlockChain.MAX_TOUR) {
+		while(blockChain.lettrePool.size() > blockChain.difficulty && blockChain.tour < BlockChain.MAX_TOUR) {
 			try {
 				blockChain.injectMot(genMot());
-				
 				Thread.sleep(200);
 				Mots bestMot = consensusMots(blockChain.getMotsCandidat()); // doivent tous elire le meme mots
 				if(bestMot != null) {
 					blockChain.ajout.lock();
 					if(!blockChain.newBlock) {
 						blockChain.tour ++;
-						Block toAdd = new Block(blockChain.tour, blockChain.blockChain.get(blockChain.blockChain.size()-1).getHash(), bestMot.publicKey,bestMot);
-						blockChain.blockChain.add(toAdd); // new block avec le mot �lu bestMot
+						Block toAdd = new Block(blockChain.tour, blockChain.blockChain.get(blockChain.blockChain.size()-1).getHash(), bestMot.politicien,bestMot);
+						blockChain.blockChain.add(toAdd); // new block avec le mot elu bestMot
 						blockChain.newBlock = true;
 						for(Lettre l :  bestMot.mot) {
-							l.blockHash = blockChain.blockChain.get(blockChain.blockChain.size()-1).getHash();
+							blockChain.lettrePool.remove(l);
 						}
-						bestMot.blockHash = blockChain.blockChain.get(blockChain.blockChain.size()-1).getHash();
 					}
-					
 					blockChain.motsCandidat = new Vector<>();
 					blockChain.ajout.unlock();
 				}
 				Thread.sleep(1500);
-				
-				System.out.println(blockChain);
+				if(blockChain.newBlock) {
+					blockChain.lock.lock();
+					blockChain.newBlock = false;
+					blockChain.lock.unlock();
+				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -96,16 +67,32 @@ public class Politicien implements Runnable{
 	
 	@SuppressWarnings("unchecked")
 	public Mots genMot() {
-		letterPool = (Vector<Lettre>) blockChain.lettrePool.clone();
+		// PoW
+		letterPool = (Vector<Lettre>) blockChain.getLetterPool().clone();
+		Collections.shuffle(letterPool);
+		
+//		ArrayList<String> s = new ArrayList<>();
+//		for(Lettre l : letterPool) {
+//			s.add(String.valueOf(l.lettre));
+//		}
+//		
+//		for(int i=0; i<motsPossible.length;i++) {
+//			ArrayList<String> c = new ArrayList<>();
+//			for(char q :motsPossible[i].toCharArray() ) {
+//				c.add(String.valueOf(q));
+//			}
+//			System.out.println(c.size());
+//			c.retainAll(s);
+//			System.out.println(c.size());
+//			
+//		}
+		
 		int i = 0;
 		Vector<Lettre> mot = new Vector<>();
-		Collections.shuffle(letterPool);
+		
 		for(Lettre l : letterPool) {
 			if(i>blockChain.difficulty) {
 				break;
-			}
-			if(!l.blockHash.equals("")) {
-				continue;
 			}
 			i++;
 			mot.add(l);
@@ -132,7 +119,7 @@ public class Politicien implements Runnable{
 	public int scoreMot(Mots m) {
 		int res = 0;
 		for(Lettre l : m.mot) {
-			res += tableauScore.get(String.valueOf(l.lettre));
+			res += tableauScore.tableauScore.get(String.valueOf(l.lettre));
 		}
 		return res;
 	}
